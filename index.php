@@ -33,6 +33,11 @@
                         <?php echo htmlspecialchars($_GET['error']); ?>
                     </div>
                 <?php endif; ?>
+                <div class="login-info">
+                    <p><i class="fas fa-info-circle"></i> Employees: Login to view your skills and training details.</p>
+                    <p><i class="fas fa-info-circle"></i> Managers: Login to manage your team's skill development.</p>
+                    <p><i class="fas fa-info-circle"></i> HR/Admin: Login to manage all employee skills and training.</p>
+                </div>
             </form>
             <div class="login-footer">
                 <p>&copy; 2023 Skill Compass - All rights reserved</p>
@@ -43,6 +48,9 @@
             <div class="welcome-text">
                 <h2>Welcome to Skill Compass</h2>
                 <p>Track, manage, and develop your professional skills</p>
+                <div class="welcome-info">
+                    <p>Employees can view and track their personal skills development</p>
+                </div>
             </div>
         </div>
     </div>
