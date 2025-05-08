@@ -8,13 +8,6 @@
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Auto-redirect to the PHP version when running on a server -->
-    <script>
-        // Check if we're running on a local server with PHP
-        if (window.location.protocol !== 'file:') {
-            window.location.href = 'index.php';
-        }
-    </script>
 </head>
 <body>
     <div class="login-container">
@@ -35,10 +28,11 @@
                 <div class="form-group">
                     <button type="submit" class="btn-login">Login</button>
                 </div>
-                <!-- Error message container (PHP code removed for HTML version) -->
-                <div class="error-message" style="display: none;">
-                    Error message will appear here
-                </div>
+                <?php if(isset($_GET['error'])): ?>
+                    <div class="error-message">
+                        <?php echo htmlspecialchars($_GET['error']); ?>
+                    </div>
+                <?php endif; ?>
             </form>
             <div class="login-footer">
                 <p>&copy; 2023 Skill Compass - All rights reserved</p>
@@ -51,10 +45,6 @@
                 <p>Track, manage, and develop your professional skills</p>
             </div>
         </div>
-    </div>
-    
-    <div class="static-notice" style="background-color: #f8d7da; color: #721c24; padding: 10px; text-align: center; position: fixed; bottom: 0; width: 100%;">
-        <p>This is a static preview. For full functionality, please run this on a PHP server like XAMPP.</p>
     </div>
 </body>
 </html>
