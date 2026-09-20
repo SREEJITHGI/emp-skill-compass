@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: emptrack_app
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      DB_SERVER: db
+      DB_USERNAME: skill_user
+      DB_PASSWORD: skill_secret_password
+      DB_NAME: skill_compass
+      DB_PORT: 3306
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/var/www/html/uploads
+
+  db:
+    image: mysql:8.0
+    container_name: emptrack_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_secret_password
+      MYSQL_DATABASE: skill_compass
+      MYSQL_USER: skill_user
+      MYSQL_PASSWORD: skill_secret_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./skill_compass.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_secret_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db_data:
+  uploads_data:
