@@ -6,11 +6,15 @@
 
 **Track Skills. Build Futures. Empowering people. Enabling growth.**
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-emp--skill--compass.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://emp-skill-compass.vercel.app/)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
 [![Database](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://mysql.com)
 [![Security](https://img.shields.io/badge/CSRF%20Protection-Zero--Trust-10b981?style=for-the-badge&logo=shield&logoColor=white)](#-security--csrf-protection)
 [![Architecture](https://img.shields.io/badge/UI%20Design-3D%20Glassmorphism-06b6d4?style=for-the-badge&logo=css3&logoColor=white)](#-futuristic-3d-ui--login-experience)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+
+### 🚀 Live Production Deployment
+👉 **[https://emp-skill-compass.vercel.app/](https://emp-skill-compass.vercel.app/)**
 
 </div>
 
