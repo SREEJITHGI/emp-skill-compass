@@ -4,12 +4,12 @@ session_start();
 
 // Check if the user is logged in, if not redirect to login page
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: index.html");
+    header("location: index.php");
     exit;
 }
 
-// Check if user is admin or HR
-if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr") {
+// Check if user is admin, HR, or manager
+if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr" && $_SESSION["role"] != "manager") {
     header("location: employee_dashboard.php");
     exit;
 }
@@ -17,13 +17,13 @@ if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr") {
 require_once "php/config.php";
 
 // Initialize search parameters
-$search = isset($_GET['search']) ? $_GET['search'] : '';
-$statusFilter = isset($_GET['status']) ? $_GET['status'] : '';
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$statusFilter = isset($_GET['status']) ? trim($_GET['status']) : '';
 
 // Get all trainings
 $trainings = [];
 
-// Build query with search and filters
+// Build query with search and filters using prepared statement
 $sql = "SELECT t.id, t.title, t.start_date, t.end_date, t.status, 
                u1.first_name as emp_first_name, u1.last_name as emp_last_name,
                s.name as skill_name
@@ -31,21 +31,41 @@ $sql = "SELECT t.id, t.title, t.start_date, t.end_date, t.status,
         JOIN users u1 ON t.employee_id = u1.id
         LEFT JOIN skills s ON t.related_skill_id = s.id
         WHERE 1=1";
-        
+$params = [];
+$types = "";
+
 if (!empty($search)) {
-    $sql .= " AND (t.title LIKE '%$search%' OR u1.first_name LIKE '%$search%' OR u1.last_name LIKE '%$search%')";
+    $sql .= " AND (t.title LIKE ? OR u1.first_name LIKE ? OR u1.last_name LIKE ?)";
+    $searchParam = "%" . $search . "%";
+    $params[] = $searchParam;
+    $params[] = $searchParam;
+    $params[] = $searchParam;
+    $types .= "sss";
 }
 
 if (!empty($statusFilter)) {
-    $sql .= " AND t.status = '$statusFilter'";
+    $sql .= " AND t.status = ?";
+    $params[] = $statusFilter;
+    $types .= "s";
 }
 
 $sql .= " ORDER BY t.start_date DESC";
 
-$result = $conn->query($sql);
+if (!empty($params)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $result = $conn->query($sql);
+}
+
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $trainings[] = $row;
+    }
+    if (isset($stmt)) {
+        $stmt->close();
     }
 }
 ?>
@@ -124,6 +144,17 @@ if ($result) {
                     <div class="user-name"><?php echo htmlspecialchars($_SESSION["name"]); ?></div>
                 </div>
             </div>
+
+            <?php if (isset($_GET['msg'])): ?>
+                <div class="alert alert-success" style="background-color: #e8f5e9; color: #2e7d32; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1.5rem; border-left: 4px solid #43a047; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_GET['msg']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (isset($_GET['error'])): ?>
+                <div class="alert alert-danger" style="background-color: #ffebee; color: #c62828; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1.5rem; border-left: 4px solid #e53935; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($_GET['error']); ?>
+                </div>
+            <?php endif; ?>
             
             <!-- Search and Filters -->
             <div class="card">
@@ -140,6 +171,9 @@ if ($result) {
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search"></i> Search
                         </button>
+                        <a href="php/export.php?type=trainings" class="btn btn-outline">
+                            <i class="fas fa-file-csv"></i> Export CSV
+                        </a>
                         <a href="create_training.php" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Schedule Training
                         </a>

@@ -4,12 +4,12 @@ session_start();
 
 // Check if the user is logged in, if not redirect to login page
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: index.html");
+    header("location: index.php");
     exit;
 }
 
-// Check if user is admin or HR
-if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr") {
+// Check if user is admin, HR, or manager
+if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr" && $_SESSION["role"] != "manager") {
     header("location: employee_dashboard.php");
     exit;
 }
@@ -173,11 +173,16 @@ if ($result) {
         <div class="content-area">
             <div class="top-bar">
                 <h1 class="page-title">Reports & Analytics</h1>
-                <div class="user-menu">
-                    <div class="user-avatar">
-                        <?php echo substr($_SESSION["name"], 0, 1); ?>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <a href="php/export.php?type=reports" class="btn btn-primary">
+                        <i class="fas fa-file-csv"></i> Export Full Audit Report (CSV)
+                    </a>
+                    <div class="user-menu">
+                        <div class="user-avatar">
+                            <?php echo substr($_SESSION["name"], 0, 1); ?>
+                        </div>
+                        <div class="user-name"><?php echo htmlspecialchars($_SESSION["name"]); ?></div>
                     </div>
-                    <div class="user-name"><?php echo htmlspecialchars($_SESSION["name"]); ?></div>
                 </div>
             </div>
             

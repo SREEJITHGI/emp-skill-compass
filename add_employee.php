@@ -4,7 +4,7 @@ session_start();
 
 // Check if the user is logged in, if not redirect to login page
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: index.html");
+    header("location: index.php");
     exit;
 }
 
@@ -15,12 +15,14 @@ if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr") {
 }
 
 require_once "php/config.php";
+require_once "php/csrf.php";
 
 $message = '';
 $messageType = '';
 
 // Check if the form is submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    require_csrf('add_employee.php');
     // Get form data and validate
     $firstName = trim($_POST['first_name']);
     $lastName = trim($_POST['last_name']);
@@ -158,6 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <?php endif; ?>
                 
                 <form method="POST" action="">
+                    <?php echo csrf_field(); ?>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="first_name">First Name*</label>

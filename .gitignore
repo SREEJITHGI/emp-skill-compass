@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Project Backups & Uploads
+react_template_backup/
+uploads/certificates/*
+!uploads/certificates/.gitkeep

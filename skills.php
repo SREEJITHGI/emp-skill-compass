@@ -4,12 +4,12 @@ session_start();
 
 // Check if the user is logged in, if not redirect to login page
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: index.html");
+    header("location: index.php");
     exit;
 }
 
-// Check if user is admin or HR
-if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr") {
+// Check if user is admin, HR, or manager
+if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr" && $_SESSION["role"] != "manager") {
     header("location: employee_dashboard.php");
     exit;
 }
@@ -17,41 +17,59 @@ if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr") {
 require_once "php/config.php";
 
 // Initialize search parameters
-$search = isset($_GET['search']) ? $_GET['search'] : '';
-$categoryFilter = isset($_GET['category']) ? $_GET['category'] : '';
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$categoryFilter = isset($_GET['category']) ? trim($_GET['category']) : '';
 
 // Get all skills
 $skills = [];
 $categories = [];
 
 // Get unique categories
-$sql = "SELECT DISTINCT category FROM skills ORDER BY category";
+$sql = "SELECT DISTINCT category FROM skills WHERE category IS NOT NULL AND category != '' ORDER BY category";
 $result = $conn->query($sql);
 if ($result) {
     while ($row = $result->fetch_assoc()) {
-        if (!empty($row['category'])) {
-            $categories[] = $row['category'];
-        }
+        $categories[] = $row['category'];
     }
 }
 
-// Build query with search and filters
+// Build query with search and filters using prepared statement
 $sql = "SELECT s.id, s.name, s.description, s.category, COUNT(es.employee_id) as employee_count 
         FROM skills s 
         LEFT JOIN employee_skills es ON s.id = es.skill_id 
         WHERE 1=1";
+$params = [];
+$types = "";
+
 if (!empty($search)) {
-    $sql .= " AND (s.name LIKE '%$search%' OR s.description LIKE '%$search%')";
+    $sql .= " AND (s.name LIKE ? OR s.description LIKE ?)";
+    $searchParam = "%" . $search . "%";
+    $params[] = $searchParam;
+    $params[] = $searchParam;
+    $types .= "ss";
 }
 if (!empty($categoryFilter)) {
-    $sql .= " AND s.category = '$categoryFilter'";
+    $sql .= " AND s.category = ?";
+    $params[] = $categoryFilter;
+    $types .= "s";
 }
 $sql .= " GROUP BY s.id ORDER BY s.name";
 
-$result = $conn->query($sql);
+if (!empty($params)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $result = $conn->query($sql);
+}
+
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $skills[] = $row;
+    }
+    if (isset($stmt)) {
+        $stmt->close();
     }
 }
 ?>
@@ -130,6 +148,17 @@ if ($result) {
                     <div class="user-name"><?php echo htmlspecialchars($_SESSION["name"]); ?></div>
                 </div>
             </div>
+
+            <?php if (isset($_GET['msg'])): ?>
+                <div class="alert alert-success" style="background-color: #e8f5e9; color: #2e7d32; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1.5rem; border-left: 4px solid #43a047; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_GET['msg']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (isset($_GET['error'])): ?>
+                <div class="alert alert-danger" style="background-color: #ffebee; color: #c62828; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1.5rem; border-left: 4px solid #e53935; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($_GET['error']); ?>
+                </div>
+            <?php endif; ?>
             
             <!-- Search and Filters -->
             <div class="card">
@@ -147,6 +176,9 @@ if ($result) {
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search"></i> Search
                         </button>
+                        <a href="php/export.php?type=skills" class="btn btn-outline">
+                            <i class="fas fa-file-csv"></i> Export CSV
+                        </a>
                         <a href="add_skill.php" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add Skill
                         </a>

@@ -76,6 +76,24 @@ CREATE TABLE IF NOT EXISTS `certifications` (
   FOREIGN KEY (`employee_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Table structure for table `requests`
+CREATE TABLE IF NOT EXISTS `requests` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `employee_id` INT(11) NOT NULL,
+  `type` ENUM('skill', 'certification', 'training') NOT NULL,
+  `target_id` INT(11) DEFAULT NULL,
+  `title` VARCHAR(150) NOT NULL,
+  `details` TEXT DEFAULT NULL,
+  `status` ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+  `reviewed_by` INT(11) DEFAULT NULL,
+  `review_notes` TEXT DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `reviewed_at` DATETIME DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`employee_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Insert default admin user
 -- Default password is 'admin123' (hashed)
 INSERT INTO `users` (`username`, `password`, `first_name`, `last_name`, `email`, `role`)

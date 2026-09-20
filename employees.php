@@ -4,12 +4,12 @@ session_start();
 
 // Check if the user is logged in, if not redirect to login page
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: index.html");
+    header("location: index.php");
     exit;
 }
 
-// Check if user is admin or HR
-if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr") {
+// Check if user is admin, HR, or manager
+if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr" && $_SESSION["role"] != "manager") {
     header("location: employee_dashboard.php");
     exit;
 }
@@ -17,38 +17,57 @@ if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr") {
 require_once "php/config.php";
 
 // Initialize search parameters
-$search = isset($_GET['search']) ? $_GET['search'] : '';
-$departmentFilter = isset($_GET['department']) ? $_GET['department'] : '';
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$departmentFilter = isset($_GET['department']) ? trim($_GET['department']) : '';
 
 // Get all employees
 $employees = [];
 $departments = [];
 
 // Get unique departments
-$sql = "SELECT DISTINCT department FROM users WHERE role = 'employee' ORDER BY department";
+$sql = "SELECT DISTINCT department FROM users WHERE role = 'employee' AND department IS NOT NULL AND department != '' ORDER BY department";
 $result = $conn->query($sql);
 if ($result) {
     while ($row = $result->fetch_assoc()) {
-        if (!empty($row['department'])) {
-            $departments[] = $row['department'];
-        }
+        $departments[] = $row['department'];
     }
 }
 
-// Build query with search and filters
+// Build query with search and filters using prepared statement
 $sql = "SELECT id, first_name, last_name, email, department, job_title FROM users WHERE role = 'employee'";
+$params = [];
+$types = "";
+
 if (!empty($search)) {
-    $sql .= " AND (first_name LIKE '%$search%' OR last_name LIKE '%$search%' OR email LIKE '%$search%')";
+    $sql .= " AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)";
+    $searchParam = "%" . $search . "%";
+    $params[] = $searchParam;
+    $params[] = $searchParam;
+    $params[] = $searchParam;
+    $types .= "sss";
 }
 if (!empty($departmentFilter)) {
-    $sql .= " AND department = '$departmentFilter'";
+    $sql .= " AND department = ?";
+    $params[] = $departmentFilter;
+    $types .= "s";
 }
 $sql .= " ORDER BY last_name, first_name";
 
-$result = $conn->query($sql);
+if (!empty($params)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $result = $conn->query($sql);
+}
+
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $employees[] = $row;
+    }
+    if (isset($stmt)) {
+        $stmt->close();
     }
 }
 ?>
@@ -127,6 +146,17 @@ if ($result) {
                     <div class="user-name"><?php echo htmlspecialchars($_SESSION["name"]); ?></div>
                 </div>
             </div>
+
+            <?php if (isset($_GET['msg'])): ?>
+                <div class="alert alert-success" style="background-color: #e8f5e9; color: #2e7d32; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1.5rem; border-left: 4px solid #43a047; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_GET['msg']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (isset($_GET['error'])): ?>
+                <div class="alert alert-danger" style="background-color: #ffebee; color: #c62828; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1.5rem; border-left: 4px solid #e53935; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($_GET['error']); ?>
+                </div>
+            <?php endif; ?>
             
             <!-- Search and Filters -->
             <div class="card">
@@ -144,6 +174,9 @@ if ($result) {
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search"></i> Search
                         </button>
+                        <a href="php/export.php?type=employees" class="btn btn-outline">
+                            <i class="fas fa-file-csv"></i> Export CSV
+                        </a>
                         <a href="add_employee.php" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add Employee
                         </a>

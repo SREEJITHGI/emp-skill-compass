@@ -12,7 +12,7 @@
     <script>
         // Check if we're running on a local server with PHP
         if (window.location.protocol !== 'file:') {
-            window.location.href = 'index.php';
+            window.location.href = 'index.php' + window.location.search;
         }
     </script>
 </head>

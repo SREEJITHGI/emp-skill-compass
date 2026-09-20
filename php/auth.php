@@ -1,16 +1,20 @@
 
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once 'config.php';
+require_once 'csrf.php';
 
 // Login functionality
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = trim($_POST['username']);
-    $password = $_POST['password'];
+    require_csrf('../index.php');
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
     
     // Basic validation
     if (empty($username) || empty($password)) {
-        header("Location: ../index.html?error=Please fill all required fields");
+        header("Location: ../index.php?error=Please fill all required fields");
         exit;
     }
     
@@ -32,10 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stmt->bind_result($id, $username, $hashed_password, $role, $first_name, $last_name);
                 if ($stmt->fetch()) {
                     if (password_verify($password, $hashed_password)) {
-                        // Password is correct, start a new session
-                        session_start();
-                        
-                        // Store data in session variables
+                        // Password is correct, store data in session variables
                         $_SESSION["loggedin"] = true;
                         $_SESSION["id"] = $id;
                         $_SESSION["username"] = $username;
@@ -57,17 +58,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             default:
                                 header("location: ../dashboard.php");
                         }
+                        exit;
                     } else {
                         // Password is not valid
-                        header("Location: ../index.html?error=Invalid username or password");
+                        header("Location: ../index.php?error=Invalid username or password");
+                        exit;
                     }
                 }
             } else {
                 // Username doesn't exist
-                header("Location: ../index.html?error=Invalid username or password");
+                header("Location: ../index.php?error=Invalid username or password");
+                exit;
             }
         } else {
-            header("Location: ../index.html?error=Oops! Something went wrong. Please try again later.");
+            header("Location: ../index.php?error=Oops! Something went wrong. Please try again later.");
+            exit;
         }
 
         // Close statement
@@ -84,7 +89,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
     session_destroy();
     
     // Redirect to login page
-    header("location: ../index.html");
+    header("location: ../index.php");
     exit;
 }
 ?>

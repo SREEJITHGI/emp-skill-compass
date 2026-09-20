@@ -1,9 +1,8 @@
-
 <?php
 // Database configuration
 define('DB_SERVER', 'localhost');
 define('DB_USERNAME', 'root');
-define('DB_PASSWORD', '');
+define('DB_PASSWORD', 'SREECARINO@2005');
 define('DB_NAME', 'skill_compass');
 
 // Establish database connection
@@ -18,4 +17,3 @@ try {
     // For production, log this instead of displaying
     die("ERROR: Could not connect to database. " . $e->getMessage());
 }
-?>

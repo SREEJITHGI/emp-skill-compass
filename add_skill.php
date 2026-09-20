@@ -4,23 +4,25 @@ session_start();
 
 // Check if the user is logged in, if not redirect to login page
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: index.html");
+    header("location: index.php");
     exit;
 }
 
-// Check if user is admin or HR
-if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr") {
+// Check if user is admin, HR, or manager
+if ($_SESSION["role"] != "admin" && $_SESSION["role"] != "hr" && $_SESSION["role"] != "manager") {
     header("location: employee_dashboard.php");
     exit;
 }
 
 require_once "php/config.php";
+require_once "php/csrf.php";
 
 $message = '';
 $messageType = '';
 
 // Check if the form is submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    require_csrf('add_skill.php');
     // Get form data and validate
     $name = trim($_POST['name']);
     $category = trim($_POST['category']);
@@ -159,6 +161,7 @@ if ($result) {
                 <?php endif; ?>
                 
                 <form method="POST" action="">
+                    <?php echo csrf_field(); ?>
                     <div class="form-group">
                         <label for="name">Skill Name*</label>
                         <input type="text" id="name" name="name" required>
